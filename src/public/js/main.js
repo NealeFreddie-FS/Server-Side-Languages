@@ -1,293 +1,578 @@
 // DOM Elements
-const pokemonContainer = document.getElementById("pokemonContainer");
-const savedPokemonContainer = document.getElementById("savedPokemonContainer");
-const loadMoreBtn = document.getElementById("loadMoreBtn");
-const randomPokemonBtn = document.getElementById("randomPokemonBtn");
+const kingdomsContainer = document.getElementById("kingdomsContainer");
+const regionsContainer = document.getElementById("regionsContainer");
+const addKingdomBtn = document.getElementById("addKingdomBtn");
+const addRegionBtn = document.getElementById("addRegionBtn");
+const kingdomModal = document.getElementById("kingdomModal");
+const regionModal = document.getElementById("regionModal");
+const kingdomForm = document.getElementById("kingdomForm");
+const regionForm = document.getElementById("regionForm");
 
 // State
-let savedPokemon = [];
+let kingdoms = [];
+let regions = [];
 
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
-  // Load initial Pokemon
-  loadRandomPokemon(6);
-
-  // Load saved Pokemon
-  loadSavedPokemon();
+  // Load kingdoms and regions
+  loadKingdoms();
+  loadRegions();
 
   // Event Listeners
-  if (loadMoreBtn) {
-    loadMoreBtn.addEventListener("click", () => loadRandomPokemon(3));
+  if (addKingdomBtn) {
+    addKingdomBtn.addEventListener("click", openKingdomModal);
   }
 
-  if (randomPokemonBtn) {
-    randomPokemonBtn.addEventListener("click", () => loadRandomPokemon(1));
+  if (addRegionBtn) {
+    addRegionBtn.addEventListener("click", openRegionModal);
+  }
+
+  // Close modals when clicking outside
+  window.addEventListener("click", (event) => {
+    if (event.target === kingdomModal) {
+      closeKingdomModal();
+    }
+    if (event.target === regionModal) {
+      closeRegionModal();
+    }
+  });
+
+  // Form submissions
+  if (kingdomForm) {
+    kingdomForm.addEventListener("submit", handleKingdomSubmit);
+  }
+
+  if (regionForm) {
+    regionForm.addEventListener("submit", handleRegionSubmit);
   }
 });
 
 /**
- * Load random Pokemon
- * @param {number} count - Number of random Pokemon to load
+ * Load kingdoms from API
  */
-async function loadRandomPokemon(count) {
+async function loadKingdoms() {
   showLoader();
 
   try {
-    const promises = [];
+    const response = await fetch("/api/kingdoms");
 
-    for (let i = 0; i < count; i++) {
-      promises.push(
-        fetch("/api/pokemon/random")
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error("Failed to fetch random Pokemon");
-            }
-            return response.json();
-          })
-          .then((data) => data.data)
-      );
+    if (!response.ok) {
+      throw new Error("Failed to fetch kingdoms");
     }
 
-    const pokemonDataArray = await Promise.all(promises);
+    const data = await response.json();
+    kingdoms = data.data || [];
 
-    pokemonDataArray.forEach((pokemonData) => {
-      renderPokemonCard(pokemonData);
-    });
+    renderKingdoms();
+    populateKingdomDropdown();
   } catch (error) {
-    console.error("Error loading random Pokemon:", error);
-    showError("Failed to load Pokemon. Please try again later.");
+    console.error("Error loading kingdoms:", error);
+    showError("Failed to load kingdoms. Please try again later.");
   } finally {
     hideLoader();
   }
 }
 
 /**
- * Load saved Pokemon from the API
+ * Load regions from API
  */
-async function loadSavedPokemon() {
+async function loadRegions() {
   try {
-    const response = await fetch("/api/pokemon/saved/all");
+    const response = await fetch("/api/regions");
 
     if (!response.ok) {
-      throw new Error("Failed to fetch saved Pokemon");
+      throw new Error("Failed to fetch regions");
     }
 
     const data = await response.json();
-    savedPokemon = data.data || [];
+    regions = data.data || [];
 
-    renderSavedPokemon();
+    renderRegions();
   } catch (error) {
-    console.error("Error loading saved Pokemon:", error);
+    console.error("Error loading regions:", error);
+    showError("Failed to load regions. Please try again later.");
   }
 }
 
 /**
- * Save a Pokemon to the collection
- * @param {Object} pokemonData - Pokemon data to save
+ * Render kingdoms in the container
  */
-async function savePokemon(pokemonData) {
-  try {
-    const response = await fetch("/api/pokemon/save", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(pokemonData),
-    });
+function renderKingdoms() {
+  if (!kingdomsContainer) return;
 
-    if (!response.ok) {
-      throw new Error("Failed to save Pokemon");
-    }
+  kingdomsContainer.innerHTML = "";
 
-    const data = await response.json();
-    savedPokemon.push(data.data);
-
-    // Update UI
-    renderSavedPokemon();
-
-    // Update save button
-    const saveBtn = document.querySelector(
-      `[data-pokemon-id="${pokemonData.name}"]`
-    );
-    if (saveBtn) {
-      saveBtn.textContent = "Saved";
-      saveBtn.classList.add("saved");
-      saveBtn.disabled = true;
-    }
-
-    showToast(`${pokemonData.name} has been saved to your collection!`);
-  } catch (error) {
-    console.error("Error saving Pokemon:", error);
-    showToast("Failed to save Pokemon. Please try again.", "error");
-  }
-}
-
-/**
- * Delete a saved Pokemon
- * @param {number} id - ID of the saved Pokemon to delete
- */
-async function deleteSavedPokemon(id) {
-  try {
-    const response = await fetch(`/api/pokemon/saved/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to delete Pokemon");
-    }
-
-    const data = await response.json();
-
-    // Update local state
-    savedPokemon = savedPokemon.filter((pokemon) => pokemon.id !== id);
-
-    // Update UI
-    renderSavedPokemon();
-
-    // Update save button on main list if present
-    const saveBtn = document.querySelector(
-      `[data-pokemon-id="${data.data.name}"]`
-    );
-    if (saveBtn) {
-      saveBtn.textContent = "Save";
-      saveBtn.classList.remove("saved");
-      saveBtn.disabled = false;
-    }
-
-    showToast(`${data.data.name} has been removed from your collection.`);
-  } catch (error) {
-    console.error("Error deleting saved Pokemon:", error);
-    showToast("Failed to delete Pokemon. Please try again.", "error");
-  }
-}
-
-/**
- * Render a Pokemon card in the main container
- * @param {Object} pokemon - Pokemon data
- */
-function renderPokemonCard(pokemon) {
-  if (!pokemonContainer) return;
-
-  const isSaved = savedPokemon.some((p) => p.name === pokemon.name);
-
-  // Get the official artwork URL (modify the ID to match the format)
-  const paddedId = String(pokemon.id).padStart(3, "0");
-  const imageUrl = `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${paddedId}.png`;
-
-  const card = document.createElement("div");
-  card.className = "pokemon-card";
-
-  card.innerHTML = `
-    <div class="pokemon-card-header">
-      <span class="pokemon-id">#${pokemon.id}</span>
-      <img src="${imageUrl}" alt="${pokemon.name}" class="pokemon-img">
-    </div>
-    <div class="pokemon-card-body">
-      <h3 class="pokemon-name">${pokemon.name}</h3>
-      <div class="pokemon-types">
-        ${pokemon.types
-          .map((type) => `<span class="type-badge ${type}">${type}</span>`)
-          .join("")}
-      </div>
-      <div class="pokemon-stats">
-        <div class="stat">
-          <div class="stat-label">Height</div>
-          <div class="stat-value">${pokemon.height} m</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Weight</div>
-          <div class="stat-value">${pokemon.weight} kg</div>
-        </div>
-      </div>
-      <p class="pokemon-description">${pokemon.flavorText}</p>
-    </div>
-    <div class="pokemon-card-footer">
-      <span class="pokemon-habitat">Habitat: ${pokemon.habitat}</span>
-      <button class="save-btn ${isSaved ? "saved" : ""}" 
-              data-pokemon-id="${pokemon.name}"
-              ${isSaved ? "disabled" : ""}>
-        ${isSaved ? "Saved" : "Save"}
-      </button>
-    </div>
-  `;
-
-  // Add event listener for save button
-  const saveBtn = card.querySelector(".save-btn");
-  if (saveBtn && !isSaved) {
-    saveBtn.addEventListener("click", () => {
-      savePokemon(pokemon);
-    });
-  }
-
-  pokemonContainer.appendChild(card);
-}
-
-/**
- * Render saved Pokemon cards
- */
-function renderSavedPokemon() {
-  if (!savedPokemonContainer) return;
-
-  savedPokemonContainer.innerHTML = "";
-
-  if (savedPokemon.length === 0) {
-    savedPokemonContainer.innerHTML = `
-      <div class="no-saved-message">
-        <p>You haven't saved any Pokemon yet. Click the "Save" button on a Pokemon card to add it to your collection.</p>
+  if (kingdoms.length === 0) {
+    kingdomsContainer.innerHTML = `
+      <div class="no-items-message">
+        <p>No kingdoms have been created yet. Click the "Add Kingdom" button to create one.</p>
       </div>
     `;
     return;
   }
 
-  savedPokemon.forEach((pokemon) => {
-    // Get the official artwork URL (modify the ID to match the format)
-    const paddedId = String(pokemon.id).padStart(3, "0");
-    const imageUrl = `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${paddedId}.png`;
-
+  kingdoms.forEach((kingdom) => {
     const card = document.createElement("div");
-    card.className = "pokemon-card";
+    card.className = "kingdom-card";
 
     card.innerHTML = `
-      <div class="pokemon-card-header">
-        <span class="pokemon-id">#${pokemon.id}</span>
-        <img src="${imageUrl}" alt="${pokemon.name}" class="pokemon-img">
+      <div class="kingdom-card-header">
+        <h3 class="kingdom-name">${kingdom.name}</h3>
+        <span class="kingdom-status ${
+          kingdom.isActive ? "active" : "inactive"
+        }">
+          ${kingdom.isActive ? "Active" : "Inactive"}
+        </span>
       </div>
-      <div class="pokemon-card-body">
-        <h3 class="pokemon-name">${pokemon.name}</h3>
-        <div class="pokemon-types">
-          ${pokemon.types
-            .map((type) => `<span class="type-badge ${type}">${type}</span>`)
-            .join("")}
+      <div class="kingdom-card-body">
+        <div class="kingdom-info">
+          <p><strong>Ruler:</strong> ${kingdom.ruler}</p>
+          <p><strong>Founded:</strong> Year ${kingdom.foundedYear}</p>
+          <p><strong>Population:</strong> ${kingdom.population.toLocaleString()}</p>
         </div>
-        <div class="pokemon-stats">
-          <div class="stat">
-            <div class="stat-label">Height</div>
-            <div class="stat-value">${pokemon.height} m</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Weight</div>
-            <div class="stat-value">${pokemon.weight} kg</div>
-          </div>
-        </div>
-        <p class="pokemon-description">${pokemon.flavorText}</p>
+        <p class="kingdom-description">${
+          kingdom.description || "No description available."
+        }</p>
       </div>
-      <div class="pokemon-card-footer">
-        <span class="pokemon-habitat">Habitat: ${pokemon.habitat}</span>
-        <button class="save-btn delete-btn" data-saved-id="${
-          pokemon.id
-        }">Remove</button>
+      <div class="kingdom-card-footer">
+        <button class="view-regions-btn" data-kingdom-id="${
+          kingdom._id
+        }">View Regions</button>
+        <div class="action-buttons">
+          <button class="edit-btn" data-kingdom-id="${
+            kingdom._id
+          }">Edit</button>
+          <button class="delete-btn" data-kingdom-id="${
+            kingdom._id
+          }">Delete</button>
+        </div>
       </div>
     `;
 
-    // Add event listener for delete button
-    const deleteBtn = card.querySelector(".delete-btn");
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", () => {
-        deleteSavedPokemon(pokemon.id);
+    // Add event listeners
+    card.querySelector(".view-regions-btn").addEventListener("click", () => {
+      loadRegionsByKingdom(kingdom._id, kingdom.name);
+    });
+
+    card.querySelector(".edit-btn").addEventListener("click", () => {
+      openKingdomEditModal(kingdom);
+    });
+
+    card.querySelector(".delete-btn").addEventListener("click", () => {
+      deleteKingdom(kingdom._id, kingdom.name);
+    });
+
+    kingdomsContainer.appendChild(card);
+  });
+}
+
+/**
+ * Render regions in the container
+ */
+function renderRegions() {
+  if (!regionsContainer) return;
+
+  regionsContainer.innerHTML = "";
+
+  if (regions.length === 0) {
+    regionsContainer.innerHTML = `
+      <div class="no-items-message">
+        <p>No regions have been created yet. Click the "Add Region" button to create one.</p>
+      </div>
+    `;
+    return;
+  }
+
+  regions.forEach((region) => {
+    const card = document.createElement("div");
+    card.className = "region-card";
+    card.classList.add(`terrain-${region.terrain.toLowerCase()}`);
+
+    card.innerHTML = `
+      <div class="region-card-header">
+        <h3 class="region-name">${region.name}</h3>
+        <span class="danger-level danger-level-${region.dangerLevel}">
+          Danger Level: ${region.dangerLevel}
+        </span>
+      </div>
+      <div class="region-card-body">
+        <div class="region-info">
+          <p><strong>Kingdom:</strong> ${region.kingdom.name}</p>
+          <p><strong>Terrain:</strong> ${region.terrain}</p>
+          <p><strong>Resources:</strong> ${
+            region.resources.join(", ") || "None"
+          }</p>
+          <p><strong>Coordinates:</strong> X:${region.coordinates.x}, Y:${
+      region.coordinates.y
+    }</p>
+        </div>
+      </div>
+      <div class="region-card-footer">
+        <div class="action-buttons">
+          <button class="edit-btn" data-region-id="${region._id}">Edit</button>
+          <button class="delete-btn" data-region-id="${
+            region._id
+          }">Delete</button>
+        </div>
+      </div>
+    `;
+
+    // Add event listeners
+    card.querySelector(".edit-btn").addEventListener("click", () => {
+      openRegionEditModal(region);
+    });
+
+    card.querySelector(".delete-btn").addEventListener("click", () => {
+      deleteRegion(region._id, region.name);
+    });
+
+    regionsContainer.appendChild(card);
+  });
+}
+
+/**
+ * Load regions by kingdom ID
+ */
+async function loadRegionsByKingdom(kingdomId, kingdomName) {
+  showLoader();
+
+  try {
+    const response = await fetch(`/api/regions/kingdom/${kingdomId}`);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch regions for this kingdom");
+    }
+
+    const data = await response.json();
+
+    // Update regions container title
+    const regionsHeader = document.querySelector("#regionsSection h2");
+    if (regionsHeader) {
+      regionsHeader.textContent = `Regions of ${kingdomName}`;
+    }
+
+    // Update view
+    regions = data.data || [];
+    renderRegions();
+
+    // Scroll to regions section
+    const regionsSection = document.getElementById("regionsSection");
+    if (regionsSection) {
+      regionsSection.scrollIntoView({ behavior: "smooth" });
+    }
+  } catch (error) {
+    console.error("Error loading regions:", error);
+    showError(
+      `Failed to load regions for ${kingdomName}. Please try again later.`
+    );
+  } finally {
+    hideLoader();
+  }
+}
+
+/**
+ * Open kingdom modal for creating new kingdom
+ */
+function openKingdomModal() {
+  if (kingdomModal) {
+    // Reset form
+    if (kingdomForm) {
+      kingdomForm.reset();
+      kingdomForm.dataset.mode = "create";
+      document.querySelector("#kingdomModal .modal-title").textContent =
+        "Add New Kingdom";
+    }
+    kingdomModal.style.display = "block";
+  }
+}
+
+/**
+ * Open kingdom modal for editing
+ */
+function openKingdomEditModal(kingdom) {
+  if (kingdomModal && kingdomForm) {
+    // Fill form with kingdom data
+    document.getElementById("kingdomId").value = kingdom._id;
+    document.getElementById("kingdomName").value = kingdom.name;
+    document.getElementById("kingdomRuler").value = kingdom.ruler;
+    document.getElementById("kingdomYear").value = kingdom.foundedYear;
+    document.getElementById("kingdomPopulation").value = kingdom.population;
+    document.getElementById("kingdomActive").checked = kingdom.isActive;
+    document.getElementById("kingdomDescription").value =
+      kingdom.description || "";
+
+    // Update form mode
+    kingdomForm.dataset.mode = "edit";
+    document.querySelector("#kingdomModal .modal-title").textContent =
+      "Edit Kingdom";
+
+    // Open modal
+    kingdomModal.style.display = "block";
+  }
+}
+
+/**
+ * Close kingdom modal
+ */
+function closeKingdomModal() {
+  if (kingdomModal) {
+    kingdomModal.style.display = "none";
+  }
+}
+
+/**
+ * Open region modal for creating new region
+ */
+function openRegionModal() {
+  if (regionModal) {
+    // Reset form
+    if (regionForm) {
+      regionForm.reset();
+      regionForm.dataset.mode = "create";
+      document.querySelector("#regionModal .modal-title").textContent =
+        "Add New Region";
+    }
+    regionModal.style.display = "block";
+  }
+}
+
+/**
+ * Open region modal for editing
+ */
+function openRegionEditModal(region) {
+  if (regionModal && regionForm) {
+    // Fill form with region data
+    document.getElementById("regionId").value = region._id;
+    document.getElementById("regionName").value = region.name;
+    document.getElementById("regionKingdom").value = region.kingdom._id;
+    document.getElementById("regionTerrain").value = region.terrain;
+    document.getElementById("regionDanger").value = region.dangerLevel;
+    document.getElementById("regionResources").value =
+      region.resources.join(", ");
+    document.getElementById("regionX").value = region.coordinates.x;
+    document.getElementById("regionY").value = region.coordinates.y;
+
+    // Update form mode
+    regionForm.dataset.mode = "edit";
+    document.querySelector("#regionModal .modal-title").textContent =
+      "Edit Region";
+
+    // Open modal
+    regionModal.style.display = "block";
+  }
+}
+
+/**
+ * Close region modal
+ */
+function closeRegionModal() {
+  if (regionModal) {
+    regionModal.style.display = "none";
+  }
+}
+
+/**
+ * Handle kingdom form submission
+ */
+async function handleKingdomSubmit(event) {
+  event.preventDefault();
+
+  const formData = {
+    name: document.getElementById("kingdomName").value,
+    ruler: document.getElementById("kingdomRuler").value,
+    foundedYear: parseInt(document.getElementById("kingdomYear").value),
+    population: parseInt(document.getElementById("kingdomPopulation").value),
+    isActive: document.getElementById("kingdomActive").checked,
+    description: document.getElementById("kingdomDescription").value,
+  };
+
+  const mode = kingdomForm.dataset.mode;
+  const kingdomId = document.getElementById("kingdomId").value;
+
+  try {
+    let response;
+
+    if (mode === "edit" && kingdomId) {
+      // Update existing kingdom
+      response = await fetch(`/api/kingdoms/${kingdomId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+    } else {
+      // Create new kingdom
+      response = await fetch("/api/kingdoms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
     }
 
-    savedPokemonContainer.appendChild(card);
+    if (!response.ok) {
+      throw new Error("Failed to save kingdom");
+    }
+
+    // Reload kingdoms
+    await loadKingdoms();
+
+    // Close modal
+    closeKingdomModal();
+
+    // Show success message
+    showToast(
+      mode === "edit"
+        ? "Kingdom updated successfully!"
+        : "Kingdom created successfully!"
+    );
+  } catch (error) {
+    console.error("Error saving kingdom:", error);
+    showError("Failed to save kingdom. Please try again.");
+  }
+}
+
+/**
+ * Handle region form submission
+ */
+async function handleRegionSubmit(event) {
+  event.preventDefault();
+
+  const formData = {
+    name: document.getElementById("regionName").value,
+    kingdom: document.getElementById("regionKingdom").value,
+    terrain: document.getElementById("regionTerrain").value,
+    dangerLevel: parseInt(document.getElementById("regionDanger").value),
+    resources: document
+      .getElementById("regionResources")
+      .value.split(",")
+      .map((resource) => resource.trim())
+      .filter((resource) => resource !== ""),
+    coordinates: {
+      x: parseInt(document.getElementById("regionX").value),
+      y: parseInt(document.getElementById("regionY").value),
+    },
+  };
+
+  const mode = regionForm.dataset.mode;
+  const regionId = document.getElementById("regionId").value;
+
+  try {
+    let response;
+
+    if (mode === "edit" && regionId) {
+      // Update existing region
+      response = await fetch(`/api/regions/${regionId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+    } else {
+      // Create new region
+      response = await fetch("/api/regions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+    }
+
+    if (!response.ok) {
+      throw new Error("Failed to save region");
+    }
+
+    // Reload regions
+    await loadRegions();
+
+    // Close modal
+    closeRegionModal();
+
+    // Show success message
+    showToast(
+      mode === "edit"
+        ? "Region updated successfully!"
+        : "Region created successfully!"
+    );
+  } catch (error) {
+    console.error("Error saving region:", error);
+    showError("Failed to save region. Please try again.");
+  }
+}
+
+/**
+ * Delete a kingdom
+ */
+async function deleteKingdom(id, name) {
+  if (
+    !confirm(
+      `Are you sure you want to delete the kingdom "${name}"? This will also delete all its regions.`
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/kingdoms/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to delete kingdom");
+    }
+
+    // Reload kingdoms and regions
+    await loadKingdoms();
+    await loadRegions();
+
+    showToast(`Kingdom "${name}" deleted successfully!`);
+  } catch (error) {
+    console.error("Error deleting kingdom:", error);
+    showError(`Failed to delete kingdom "${name}". Please try again.`);
+  }
+}
+
+/**
+ * Delete a region
+ */
+async function deleteRegion(id, name) {
+  if (!confirm(`Are you sure you want to delete the region "${name}"?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/regions/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to delete region");
+    }
+
+    // Reload regions
+    await loadRegions();
+
+    showToast(`Region "${name}" deleted successfully!`);
+  } catch (error) {
+    console.error("Error deleting region:", error);
+    showError(`Failed to delete region "${name}". Please try again.`);
+  }
+}
+
+/**
+ * Populate kingdom dropdown
+ */
+function populateKingdomDropdown() {
+  const dropdown = document.getElementById("regionKingdom");
+  if (!dropdown) return;
+
+  // Clear existing options except the first one
+  while (dropdown.options.length > 1) {
+    dropdown.remove(1);
+  }
+
+  // Add kingdom options
+  kingdoms.forEach((kingdom) => {
+    const option = document.createElement("option");
+    option.value = kingdom._id;
+    option.textContent = kingdom.name;
+    dropdown.appendChild(option);
   });
 }
 
@@ -313,7 +598,6 @@ function hideLoader() {
 
 /**
  * Show error message
- * @param {string} message - Error message to display
  */
 function showError(message) {
   const errorContainer = document.getElementById("errorContainer");
@@ -329,8 +613,6 @@ function showError(message) {
 
 /**
  * Show toast notification
- * @param {string} message - Message to display
- * @param {string} type - Type of toast (success, error)
  */
 function showToast(message, type = "success") {
   // Create toast element if it doesn't exist
@@ -339,22 +621,12 @@ function showToast(message, type = "success") {
   if (!toastContainer) {
     toastContainer = document.createElement("div");
     toastContainer.id = "toastContainer";
-    toastContainer.style.position = "fixed";
-    toastContainer.style.bottom = "20px";
-    toastContainer.style.right = "20px";
-    toastContainer.style.zIndex = "1000";
     document.body.appendChild(toastContainer);
   }
 
   // Create toast
   const toast = document.createElement("div");
   toast.className = `toast ${type}`;
-  toast.style.backgroundColor = type === "success" ? "#4CAF50" : "#F44336";
-  toast.style.color = "white";
-  toast.style.padding = "12px 20px";
-  toast.style.borderRadius = "4px";
-  toast.style.marginTop = "10px";
-  toast.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
   toast.textContent = message;
 
   // Add to container
@@ -363,8 +635,6 @@ function showToast(message, type = "success") {
   // Remove after delay
   setTimeout(() => {
     toast.style.opacity = "0";
-    toast.style.transition = "opacity 0.5s";
-
     setTimeout(() => {
       toastContainer.removeChild(toast);
     }, 500);

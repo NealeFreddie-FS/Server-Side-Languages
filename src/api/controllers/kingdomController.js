@@ -1,8 +1,48 @@
 const Kingdom = require("../models/kingdom");
 
+// Mock data for demo mode when database is not available
+const mockKingdoms = [
+  {
+    _id: "60d21b4667d0d8992e610c85",
+    name: "Eldoria",
+    ruler: "Queen Elara",
+    foundedYear: 1200,
+    population: 50000,
+    isActive: true,
+    description: "A prosperous kingdom with lush forests and fertile plains",
+    createdAt: new Date("2023-06-19T14:23:22.112Z"),
+    updatedAt: new Date("2023-06-19T14:23:22.112Z"),
+  },
+  {
+    _id: "60d21b5c67d0d8992e610c86",
+    name: "Stormhold",
+    ruler: "King Aldric",
+    foundedYear: 800,
+    population: 35000,
+    isActive: true,
+    description: "A mountainous kingdom known for its fierce warriors",
+    createdAt: new Date("2023-06-19T14:23:40.221Z"),
+    updatedAt: new Date("2023-06-19T14:23:40.221Z"),
+  },
+];
+
+// Helper to check if MongoDB is connected
+const isDbConnected = () => {
+  return Kingdom.db?.db?.databaseName !== undefined;
+};
+
 // Get all kingdoms
 exports.getAllKingdoms = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      return res.status(200).json({
+        success: true,
+        mode: "demo",
+        count: mockKingdoms.length,
+        data: mockKingdoms,
+      });
+    }
+
     const kingdoms = await Kingdom.find();
     res.status(200).json({
       success: true,
@@ -21,6 +61,23 @@ exports.getAllKingdoms = async (req, res) => {
 // Get a single kingdom by ID
 exports.getKingdomById = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      const kingdom = mockKingdoms.find((k) => k._id === req.params.id);
+
+      if (!kingdom) {
+        return res.status(404).json({
+          success: false,
+          message: `Kingdom with id ${req.params.id} not found`,
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        mode: "demo",
+        data: kingdom,
+      });
+    }
+
     const kingdom = await Kingdom.findById(req.params.id);
 
     if (!kingdom) {
@@ -54,6 +111,20 @@ exports.getKingdomById = async (req, res) => {
 // Create a new kingdom
 exports.createKingdom = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      return res.status(200).json({
+        success: true,
+        mode: "demo",
+        message: "Kingdom created (demo mode - not saved to database)",
+        data: {
+          _id: `mock-${Date.now()}`,
+          ...req.body,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+    }
+
     const kingdom = await Kingdom.create(req.body);
 
     res.status(201).json({
@@ -87,6 +158,32 @@ exports.createKingdom = async (req, res) => {
 // Update a kingdom
 exports.updateKingdom = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      const kingdomIndex = mockKingdoms.findIndex(
+        (k) => k._id === req.params.id
+      );
+
+      if (kingdomIndex === -1) {
+        return res.status(404).json({
+          success: false,
+          message: `Kingdom with id ${req.params.id} not found`,
+        });
+      }
+
+      const updatedKingdom = {
+        ...mockKingdoms[kingdomIndex],
+        ...req.body,
+        updatedAt: new Date(),
+      };
+
+      return res.status(200).json({
+        success: true,
+        mode: "demo",
+        message: "Kingdom updated (demo mode - not saved to database)",
+        data: updatedKingdom,
+      });
+    }
+
     const kingdom = await Kingdom.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -131,6 +228,15 @@ exports.updateKingdom = async (req, res) => {
 // Delete a kingdom
 exports.deleteKingdom = async (req, res) => {
   try {
+    if (!isDbConnected()) {
+      return res.status(200).json({
+        success: true,
+        mode: "demo",
+        message: "Kingdom deleted (demo mode - not actually deleted)",
+        data: {},
+      });
+    }
+
     const kingdom = await Kingdom.findByIdAndDelete(req.params.id);
 
     if (!kingdom) {

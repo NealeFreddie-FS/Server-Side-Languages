@@ -4,513 +4,336 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Kingdoms API</title>
-    <style>
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        line-height: 1.6;
-        color: #333;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #f5f5f5;
-      }
-      header {
-        background-color: #2c3e50;
-        color: white;
-        padding: 20px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-      }
-      h1 {
-        margin: 0;
-      }
-      h2 {
-        color: #2c3e50;
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 10px;
-      }
-      code {
-        background-color: #f8f8f8;
-        padding: 2px 5px;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-        font-family: monospace;
-      }
-      pre {
-        background-color: #f8f8f8;
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        overflow-x: auto;
-      }
-      .endpoint {
-        background-color: white;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-      .method {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 3px;
-        color: white;
-        margin-right: 10px;
-        font-weight: bold;
-      }
-      .get {
-        background-color: #61affe;
-      }
-      .post {
-        background-color: #49cc90;
-      }
-      .put {
-        background-color: #fca130;
-      }
-      .delete {
-        background-color: #f93e3e;
-      }
-      .url {
-        font-family: monospace;
-        font-weight: bold;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 20px 0;
-      }
-      th,
-      td {
-        padding: 12px 15px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-      }
-      th {
-        background-color: #f2f2f2;
-      }
-      tr:hover {
-        background-color: #f5f5f5;
-      }
-    </style>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
   </head>
   <body>
     <header>
-      <h1>Fantasy Kingdoms API</h1>
-      <p>RESTful API for managing fantasy kingdoms and their regions</p>
+      <div class="container header-container">
+        <a href="/" class="logo">
+          <i class="fas fa-crown"></i>
+          <span>Fantasy Kingdoms</span>
+        </a>
+        <nav>
+          <ul>
+            <li><a href="#kingdomsSection">Kingdoms</a></li>
+            <li><a href="#regionsSection">Regions</a></li>
+            <li><a href="#about">About</a></li>
+          </ul>
+        </nav>
+      </div>
     </header>
 
-    <section>
-      <h2>API Overview</h2>
-      <p>
-        This API allows you to manage fantasy kingdoms and their regions. You
-        can perform CRUD operations on both kingdoms and regions, with regions
-        having a "belongs to" relationship with kingdoms.
-      </p>
-
-      <h3>Base URL</h3>
-      <code>http://localhost:3000/api</code>
-    </section>
-
-    <section>
-      <h2>Kingdoms Endpoints</h2>
-
-      <div class="endpoint">
-        <span class="method get">GET</span>
-        <span class="url">/kingdoms</span>
-        <p>Returns a list of all kingdoms.</p>
-
-        <h4>Response</h4>
-        <pre>
-{
-  "success": true,
-  "count": 2,
-  "data": [
-    {
-      "_id": "60d21b4667d0d8992e610c85",
-      "name": "Eldoria",
-      "ruler": "Queen Elara",
-      "foundedYear": 1200,
-      "population": 50000,
-      "isActive": true,
-      "description": "A prosperous kingdom with lush forests and fertile plains",
-      "createdAt": "2023-06-19T14:23:22.112Z",
-      "updatedAt": "2023-06-19T14:23:22.112Z"
-    },
-    {
-      "_id": "60d21b5c67d0d8992e610c86",
-      "name": "Stormhold",
-      "ruler": "King Aldric",
-      "foundedYear": 800,
-      "population": 35000,
-      "isActive": true,
-      "description": "A mountainous kingdom known for its fierce warriors",
-      "createdAt": "2023-06-19T14:23:40.221Z",
-      "updatedAt": "2023-06-19T14:23:40.221Z"
-    }
-  ]
-}</pre
-        >
-      </div>
-
-      <div class="endpoint">
-        <span class="method get">GET</span>
-        <span class="url">/kingdoms/:id</span>
-        <p>Returns a specific kingdom by ID.</p>
-
-        <h4>Response</h4>
-        <pre>
-{
-  "success": true,
-  "data": {
-    "_id": "60d21b4667d0d8992e610c85",
-    "name": "Eldoria",
-    "ruler": "Queen Elara",
-    "foundedYear": 1200,
-    "population": 50000,
-    "isActive": true,
-    "description": "A prosperous kingdom with lush forests and fertile plains",
-    "createdAt": "2023-06-19T14:23:22.112Z",
-    "updatedAt": "2023-06-19T14:23:22.112Z"
-  }
-}</pre
-        >
-      </div>
-
-      <div class="endpoint">
-        <span class="method post">POST</span>
-        <span class="url">/kingdoms</span>
-        <p>Creates a new kingdom.</p>
-
-        <h4>Request Body</h4>
-        <pre>
-{
-  "name": "Frosthold",
-  "ruler": "King Bjorn",
-  "foundedYear": 950,
-  "population": 28000,
-  "isActive": true,
-  "description": "A northern kingdom covered in snow and ice"
-}</pre
-        >
-
-        <h4>Response</h4>
-        <pre>
-{
-  "success": true,
-  "data": {
-    "_id": "60d21c1267d0d8992e610c87",
-    "name": "Frosthold",
-    "ruler": "King Bjorn",
-    "foundedYear": 950,
-    "population": 28000,
-    "isActive": true,
-    "description": "A northern kingdom covered in snow and ice",
-    "createdAt": "2023-06-19T14:26:26.843Z",
-    "updatedAt": "2023-06-19T14:26:26.843Z"
-  }
-}</pre
-        >
-      </div>
-
-      <div class="endpoint">
-        <span class="method put">PUT</span>
-        <span class="url">/kingdoms/:id</span>
-        <p>Updates a specific kingdom.</p>
-
-        <h4>Request Body</h4>
-        <pre>
-{
-  "ruler": "King Bjorn the Wise",
-  "population": 30000
-}</pre
-        >
-
-        <h4>Response</h4>
-        <pre>
-{
-  "success": true,
-  "data": {
-    "_id": "60d21c1267d0d8992e610c87",
-    "name": "Frosthold",
-    "ruler": "King Bjorn the Wise",
-    "foundedYear": 950,
-    "population": 30000,
-    "isActive": true,
-    "description": "A northern kingdom covered in snow and ice",
-    "createdAt": "2023-06-19T14:26:26.843Z",
-    "updatedAt": "2023-06-19T14:28:52.119Z"
-  }
-}</pre
-        >
-      </div>
-
-      <div class="endpoint">
-        <span class="method delete">DELETE</span>
-        <span class="url">/kingdoms/:id</span>
-        <p>Deletes a specific kingdom.</p>
-
-        <h4>Response</h4>
-        <pre>
-{
-  "success": true,
-  "message": "Kingdom deleted successfully",
-  "data": {}
-}</pre
-        >
+    <section class="hero">
+      <div class="container">
+        <h1>Explore the Fantasy Kingdoms</h1>
+        <p>
+          Discover ancient kingdoms and their mysterious regions. Create your
+          own fantasy world map with kingdoms and regions that have unique
+          characteristics.
+        </p>
       </div>
     </section>
 
-    <section>
-      <h2>Regions Endpoints</h2>
+    <main class="container">
+      <!-- Error Container -->
+      <div id="errorContainer"></div>
 
-      <div class="endpoint">
-        <span class="method get">GET</span>
-        <span class="url">/regions</span>
-        <p>Returns a list of all regions.</p>
-
-        <h4>Response</h4>
-        <pre>
-{
-  "success": true,
-  "count": 2,
-  "data": [
-    {
-      "_id": "60d21d5867d0d8992e610c88",
-      "name": "Misty Mountains",
-      "kingdom": {
-        "_id": "60d21b4667d0d8992e610c85",
-        "name": "Eldoria",
-        "ruler": "Queen Elara"
-      },
-      "terrain": "Mountains",
-      "resources": ["Iron", "Silver", "Crystal"],
-      "dangerLevel": 7,
-      "coordinates": {
-        "x": 120,
-        "y": 85
-      },
-      "createdAt": "2023-06-19T14:32:08.321Z",
-      "updatedAt": "2023-06-19T14:32:08.321Z"
-    },
-    {
-      "_id": "60d21d7667d0d8992e610c89",
-      "name": "Emerald Forest",
-      "kingdom": {
-        "_id": "60d21b4667d0d8992e610c85",
-        "name": "Eldoria",
-        "ruler": "Queen Elara"
-      },
-      "terrain": "Forest",
-      "resources": ["Wood", "Herbs", "Game"],
-      "dangerLevel": 3,
-      "coordinates": {
-        "x": 95,
-        "y": 120
-      },
-      "createdAt": "2023-06-19T14:32:38.761Z",
-      "updatedAt": "2023-06-19T14:32:38.761Z"
-    }
-  ]
-}</pre
-        >
+      <!-- Loader -->
+      <div id="loaderContainer" class="loader-container" style="display: none">
+        <span class="loader"></span>
       </div>
 
-      <div class="endpoint">
-        <span class="method get">GET</span>
-        <span class="url">/regions/:id</span>
-        <p>Returns a specific region by ID.</p>
+      <!-- Kingdoms Section -->
+      <section id="kingdomsSection" class="section">
+        <div class="section-header">
+          <h2 class="section-title">Kingdoms</h2>
+          <button id="addKingdomBtn" class="btn">
+            <i class="fas fa-plus"></i> Add Kingdom
+          </button>
+        </div>
+        <div id="kingdomsContainer" class="kingdoms-container">
+          <!-- Kingdom cards will be dynamically added here -->
+        </div>
+      </section>
 
-        <h4>Response</h4>
-        <pre>
-{
-  "success": true,
-  "data": {
-    "_id": "60d21d5867d0d8992e610c88",
-    "name": "Misty Mountains",
-    "kingdom": {
-      "_id": "60d21b4667d0d8992e610c85",
-      "name": "Eldoria",
-      "ruler": "Queen Elara",
-      "foundedYear": 1200,
-      "population": 50000,
-      "isActive": true,
-      "description": "A prosperous kingdom with lush forests and fertile plains",
-      "createdAt": "2023-06-19T14:23:22.112Z",
-      "updatedAt": "2023-06-19T14:23:22.112Z"
-    },
-    "terrain": "Mountains",
-    "resources": ["Iron", "Silver", "Crystal"],
-    "dangerLevel": 7,
-    "coordinates": {
-      "x": 120,
-      "y": 85
-    },
-    "createdAt": "2023-06-19T14:32:08.321Z",
-    "updatedAt": "2023-06-19T14:32:08.321Z"
-  }
-}</pre
-        >
+      <!-- Regions Section -->
+      <section id="regionsSection" class="section">
+        <div class="section-header">
+          <h2 class="section-title">Regions</h2>
+          <button id="addRegionBtn" class="btn">
+            <i class="fas fa-plus"></i> Add Region
+          </button>
+        </div>
+        <div id="regionsContainer" class="regions-container">
+          <!-- Region cards will be dynamically added here -->
+        </div>
+      </section>
+
+      <!-- About Section -->
+      <section id="about" class="section">
+        <h2 class="section-title">About Fantasy Kingdoms API</h2>
+        <div style="margin-top: 20px">
+          <p>
+            Fantasy Kingdoms API is a RESTful API that allows you to manage
+            fantasy kingdoms and their regions. This interface demonstrates the
+            API capabilities, allowing you to create, read, update, and delete
+            both kingdoms and regions.
+          </p>
+          <p style="margin-top: 15px">
+            The API is built using Node.js, Express, and MongoDB with Mongoose.
+            It features comprehensive data validation, proper error handling,
+            and follows RESTful conventions. Regions have a "belongs to"
+            relationship with kingdoms, allowing you to organize your fantasy
+            world.
+          </p>
+          <h3 style="margin-top: 25px; font-size: 1.3rem">API Endpoints</h3>
+          <div
+            style="
+              margin-top: 10px;
+              background: #f8f9fa;
+              padding: 20px;
+              border-radius: 5px;
+            "
+          >
+            <h4>Kingdoms</h4>
+            <ul style="margin-top: 10px; padding-left: 20px">
+              <li><code>GET /api/kingdoms</code> - Get all kingdoms</li>
+              <li>
+                <code>GET /api/kingdoms/:id</code> - Get a specific kingdom
+              </li>
+              <li><code>POST /api/kingdoms</code> - Create a new kingdom</li>
+              <li><code>PUT /api/kingdoms/:id</code> - Update a kingdom</li>
+              <li><code>DELETE /api/kingdoms/:id</code> - Delete a kingdom</li>
+            </ul>
+            <h4 style="margin-top: 15px">Regions</h4>
+            <ul style="margin-top: 10px; padding-left: 20px">
+              <li><code>GET /api/regions</code> - Get all regions</li>
+              <li><code>GET /api/regions/:id</code> - Get a specific region</li>
+              <li>
+                <code>GET /api/regions/kingdom/:kingdomId</code> - Get regions
+                by kingdom
+              </li>
+              <li><code>POST /api/regions</code> - Create a new region</li>
+              <li><code>PUT /api/regions/:id</code> - Update a region</li>
+              <li><code>DELETE /api/regions/:id</code> - Delete a region</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Kingdom Modal -->
+    <div id="kingdomModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Add New Kingdom</h3>
+          <span class="close-modal">&times;</span>
+        </div>
+        <form id="kingdomForm" data-mode="create">
+          <input type="hidden" id="kingdomId" />
+          <div class="form-group">
+            <label for="kingdomName" class="form-label">Kingdom Name</label>
+            <input type="text" id="kingdomName" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="kingdomRuler" class="form-label">Ruler</label>
+            <input
+              type="text"
+              id="kingdomRuler"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="kingdomYear" class="form-label">Founded Year</label>
+            <input
+              type="number"
+              id="kingdomYear"
+              class="form-control"
+              required
+              min="0"
+            />
+            <span class="form-hint"
+              >The year when this kingdom was founded</span
+            >
+          </div>
+          <div class="form-group">
+            <label for="kingdomPopulation" class="form-label">Population</label>
+            <input
+              type="number"
+              id="kingdomPopulation"
+              class="form-control"
+              required
+              min="100"
+            />
+          </div>
+          <div class="form-check">
+            <input
+              type="checkbox"
+              id="kingdomActive"
+              class="form-check-input"
+              checked
+            />
+            <label for="kingdomActive" class="form-check-label"
+              >Kingdom is Active</label
+            >
+          </div>
+          <div class="form-group">
+            <label for="kingdomDescription" class="form-label"
+              >Description</label
+            >
+            <textarea
+              id="kingdomDescription"
+              class="form-control"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeKingdomModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn">Save Kingdom</button>
+          </div>
+        </form>
       </div>
+    </div>
 
-      <div class="endpoint">
-        <span class="method get">GET</span>
-        <span class="url">/regions/kingdom/:kingdomId</span>
-        <p>Returns all regions belonging to a specific kingdom.</p>
-
-        <h4>Response</h4>
-        <pre>
-{
-  "success": true,
-  "count": 2,
-  "kingdomName": "Eldoria",
-  "data": [
-    {
-      "_id": "60d21d5867d0d8992e610c88",
-      "name": "Misty Mountains",
-      "kingdom": {
-        "_id": "60d21b4667d0d8992e610c85",
-        "name": "Eldoria",
-        "ruler": "Queen Elara"
-      },
-      "terrain": "Mountains",
-      "resources": ["Iron", "Silver", "Crystal"],
-      "dangerLevel": 7,
-      "coordinates": {
-        "x": 120,
-        "y": 85
-      },
-      "createdAt": "2023-06-19T14:32:08.321Z",
-      "updatedAt": "2023-06-19T14:32:08.321Z"
-    },
-    {
-      "_id": "60d21d7667d0d8992e610c89",
-      "name": "Emerald Forest",
-      "kingdom": {
-        "_id": "60d21b4667d0d8992e610c85",
-        "name": "Eldoria",
-        "ruler": "Queen Elara"
-      },
-      "terrain": "Forest",
-      "resources": ["Wood", "Herbs", "Game"],
-      "dangerLevel": 3,
-      "coordinates": {
-        "x": 95,
-        "y": 120
-      },
-      "createdAt": "2023-06-19T14:32:38.761Z",
-      "updatedAt": "2023-06-19T14:32:38.761Z"
-    }
-  ]
-}</pre
-        >
+    <!-- Region Modal -->
+    <div id="regionModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Add New Region</h3>
+          <span class="close-modal">&times;</span>
+        </div>
+        <form id="regionForm" data-mode="create">
+          <input type="hidden" id="regionId" />
+          <div class="form-group">
+            <label for="regionName" class="form-label">Region Name</label>
+            <input type="text" id="regionName" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="regionKingdom" class="form-label">Kingdom</label>
+            <select id="regionKingdom" class="form-control" required>
+              <option value="">-- Select Kingdom --</option>
+              <!-- Kingdom options will be dynamically added here -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="regionTerrain" class="form-label">Terrain Type</label>
+            <select id="regionTerrain" class="form-control" required>
+              <option value="">-- Select Terrain --</option>
+              <option value="Mountains">Mountains</option>
+              <option value="Forest">Forest</option>
+              <option value="Desert">Desert</option>
+              <option value="Plains">Plains</option>
+              <option value="Coastal">Coastal</option>
+              <option value="Swamp">Swamp</option>
+              <option value="Tundra">Tundra</option>
+              <option value="Volcanic">Volcanic</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="regionDanger" class="form-label"
+              >Danger Level (1-10)</label
+            >
+            <input
+              type="number"
+              id="regionDanger"
+              class="form-control"
+              required
+              min="1"
+              max="10"
+              value="3"
+            />
+            <span class="form-hint">1 = Safe, 10 = Extremely Dangerous</span>
+          </div>
+          <div class="form-group">
+            <label for="regionResources" class="form-label">Resources</label>
+            <input type="text" id="regionResources" class="form-control" />
+            <span class="form-hint"
+              >Comma-separated list of resources (e.g., Gold, Silver,
+              Wood)</span
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label">Map Coordinates</label>
+            <div style="display: flex; gap: 10px">
+              <div style="flex: 1">
+                <label for="regionX" class="form-label">X</label>
+                <input
+                  type="number"
+                  id="regionX"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div style="flex: 1">
+                <label for="regionY" class="form-label">Y</label>
+                <input
+                  type="number"
+                  id="regionY"
+                  class="form-control"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeRegionModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn">Save Region</button>
+          </div>
+        </form>
       </div>
+    </div>
 
-      <div class="endpoint">
-        <span class="method post">POST</span>
-        <span class="url">/regions</span>
-        <p>Creates a new region.</p>
-
-        <h4>Request Body</h4>
-        <pre>
-{
-  "name": "Burning Sands",
-  "kingdom": "60d21b5c67d0d8992e610c86",
-  "terrain": "Desert",
-  "resources": ["Gold", "Gemstones"],
-  "dangerLevel": 8,
-  "coordinates": {
-    "x": 180,
-    "y": 220
-  }
-}</pre
-        >
-
-        <h4>Response</h4>
-        <pre>
-{
-  "success": true,
-  "data": {
-    "_id": "60d21e1c67d0d8992e610c8a",
-    "name": "Burning Sands",
-    "kingdom": "60d21b5c67d0d8992e610c86",
-    "terrain": "Desert",
-    "resources": ["Gold", "Gemstones"],
-    "dangerLevel": 8,
-    "coordinates": {
-      "x": 180,
-      "y": 220
-    },
-    "createdAt": "2023-06-19T14:35:24.551Z",
-    "updatedAt": "2023-06-19T14:35:24.551Z"
-  }
-}</pre
-        >
+    <footer>
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <h3>Fantasy Kingdoms API</h3>
+            <p>
+              Explore and manage your fantasy world with our comprehensive API.
+            </p>
+          </div>
+          <div class="footer-section">
+            <h3>Quick Links</h3>
+            <a href="#kingdomsSection">Kingdoms</a>
+            <a href="#regionsSection">Regions</a>
+            <a href="#about">About</a>
+          </div>
+          <div class="footer-section">
+            <h3>API Documentation</h3>
+            <a href="/api">API Root</a>
+            <a href="/api/kingdoms">Kingdoms Endpoint</a>
+            <a href="/api/regions">Regions Endpoint</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>
+            &copy; 2023 Fantasy Kingdoms API. Created for educational purposes.
+          </p>
+        </div>
       </div>
-
-      <div class="endpoint">
-        <span class="method put">PUT</span>
-        <span class="url">/regions/:id</span>
-        <p>Updates a specific region.</p>
-
-        <h4>Request Body</h4>
-        <pre>
-{
-  "dangerLevel": 9,
-  "resources": ["Gold", "Gemstones", "Ancient Artifacts"]
-}</pre
-        >
-
-        <h4>Response</h4>
-        <pre>
-{
-  "success": true,
-  "data": {
-    "_id": "60d21e1c67d0d8992e610c8a",
-    "name": "Burning Sands",
-    "kingdom": {
-      "_id": "60d21b5c67d0d8992e610c86",
-      "name": "Stormhold",
-      "ruler": "King Aldric"
-    },
-    "terrain": "Desert",
-    "resources": ["Gold", "Gemstones", "Ancient Artifacts"],
-    "dangerLevel": 9,
-    "coordinates": {
-      "x": 180,
-      "y": 220
-    },
-    "createdAt": "2023-06-19T14:35:24.551Z",
-    "updatedAt": "2023-06-19T14:37:08.124Z"
-  }
-}</pre
-        >
-      </div>
-
-      <div class="endpoint">
-        <span class="method delete">DELETE</span>
-        <span class="url">/regions/:id</span>
-        <p>Deletes a specific region.</p>
-
-        <h4>Response</h4>
-        <pre>
-{
-  "success": true,
-  "message": "Region deleted successfully",
-  "data": {}
-}</pre
-        >
-      </div>
-    </section>
-
-    <footer
-      style="
-        margin-top: 50px;
-        text-align: center;
-        color: #777;
-        font-size: 0.9em;
-      "
-    >
-      <p>Fantasy Kingdoms API Documentation</p>
     </footer>
+
+    <!-- Toast container for notifications -->
+    <div id="toastContainer"></div>
+
+    <script src="/js/main.js"></script>
   </body>
 </html>
